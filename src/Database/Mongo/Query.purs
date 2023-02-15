@@ -22,17 +22,18 @@ module Database.Mongo.Query
   , text
   , elemMatch
   ) where
+
 import Prelude
 
 import Database.Mongo.Types (TextQuery)
 import Foreign (Foreign)
+import Prim.Row as Row
+import Prim.RowList (Cons, Nil, RowList, class RowToList)
 import Record as Record
 import Record.Builder (Builder)
 import Record.Builder as Builder
 import Simple.JSON (class WriteForeign, write)
-import Type.Prelude (class IsSymbol, RLProxy(..), SProxy(..))
-import Prim.RowList (Cons, Nil, RowList, class RowToList)
-import Prim.Row as Row
+import Type.Prelude (class IsSymbol, Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Query :: Type -> Type
@@ -95,7 +96,7 @@ instance recordWriteQuery ::
   ) => IsQuery (Record row) (Record orig) where
   by rec = unsafeCoerce $ Builder.build steps {}
     where
-      rlp = RLProxy :: RLProxy rl
+      rlp = Proxy :: Proxy rl
       steps = writeQueryRecord rlp rec
 
 class IsQueryRecord (rl :: RowList Type) row (orig :: Row Type) (from :: Row Type) (to :: Row Type)
@@ -114,9 +115,9 @@ instance consWriteQueryFields ::
   ) => IsQueryRecord (Cons name ty tail) row orig from to where
   writeQueryRecord _ rec = result
     where
-      namep = SProxy :: SProxy name
+      namep = Proxy :: Proxy name
       value = Record.get namep rec
-      tailp = RLProxy :: RLProxy tail
+      tailp = Proxy :: Proxy tail
       rest = writeQueryRecord tailp rec
       result = Builder.insert namep (write value) <<< rest
 

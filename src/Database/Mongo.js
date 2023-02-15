@@ -1,6 +1,6 @@
 'use strict';
 
-exports._connect = function _connect(uri, canceler, callback, left, right) {
+export const _connect = function _connect(uri, canceler, callback, left, right) {
   var client = require('mongodb').MongoClient;
   client.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }, function(err, x) {
     
@@ -14,19 +14,19 @@ exports._connect = function _connect(uri, canceler, callback, left, right) {
   return canceler(client);
 };
 
-exports._defaultDb = function _defaultDb(client) {
+export const _defaultDb = function _defaultDb(client) {
   return client.db();
 }
 
-exports._db = function _defaultDb(dbName, options, client) {
+export const _db = function _defaultDb(dbName, options, client) {
   return client.db(dbName, options);
 }
 
-exports.__db = function _defaultDb(dbName, client) {
+export const __db = function _defaultDb(dbName, client) {
   return client.db(dbName);
 }
 
-exports._handleParseFailure = function _handleParseFailure(err, canceler, errback) {
+export const _handleParseFailure = function _handleParseFailure(err, canceler, errback) {
   process.nextTick(function() {
     errback(err)();
   });
@@ -34,28 +34,28 @@ exports._handleParseFailure = function _handleParseFailure(err, canceler, errbac
   return canceler(client);
 };
 
-exports._close = function _close(client, canceler, callback, left, right) {
+export const _close = function _close(client, canceler, callback, left, right) {
   client.close(function(err, x) {
     (err ? callback(left(err)) : callback(right(x)))();
   });
   return canceler({});
 };
 
-exports._collection = function _collection(name, db, canceler, callback, left, right) {
+export const _collection = function _collection(name, db, canceler, callback, left, right) {
   db.collection(name, function(err, x) {
     (err ? callback(left(err)) : callback(right(x)))();
   });
   return canceler(db);
 };
 
-exports._collect = function _collect(cursor, canceler, callback, left, right) {
+export const _collect = function _collect(cursor, canceler, callback, left, right) {
   cursor.toArray(function(err, x) {
     (err ? callback(left(err)) : callback(right(x)))();
   });
   return canceler(cursor);
 };
 
-exports._collectOne = function _collectOne(cursor, canceler,  callback, left, right) {
+export const _collectOne = function _collectOne(cursor, canceler,  callback, left, right) {
   cursor.next(function(err, x) {
     if (err) {
       callback(left(err))();
@@ -70,21 +70,21 @@ exports._collectOne = function _collectOne(cursor, canceler,  callback, left, ri
   return canceler(cursor);
 };
 
-exports._findOne = function _findOne(selector, fields, collection, canceler, callback, left, right) {
+export const _findOne = function _findOne(selector, fields, collection, canceler, callback, left, right) {
   collection.findOne(selector, fields, function(err, x) {
     (err ? callback(left(err)) : callback(right(x)))();
   });
   return canceler(collection);
 };
 
-exports._find = function _find(selector, fields, collection, canceler, callback, left, right) {
+export const _find = function _find(selector, fields, collection, canceler, callback, left, right) {
   collection.find(selector, fields, function(err, x) {
     (err ? callback(left(err)) : callback(right(x)))();
   });
   return canceler(collection);
 };
 
-exports._insertOne = function _insertOne(json, options, collection, canceler, callback, left, right) {
+export const _insertOne = function _insertOne(json, options, collection, canceler, callback, left, right) {
   collection.insertOne(json, options, function(err, x) {
     (err ? 
       callback(left(err)) : 
@@ -94,7 +94,7 @@ exports._insertOne = function _insertOne(json, options, collection, canceler, ca
   return canceler(collection);
 };
 
-exports._insertMany = function _insertMany(json, options, collection, canceler, callback, left, right) {
+export const _insertMany = function _insertMany(json, options, collection, canceler, callback, left, right) {
   collection.insertMany(json, options, function(err, x) {
     (err ? 
       callback(left(err)) : 
@@ -104,7 +104,7 @@ exports._insertMany = function _insertMany(json, options, collection, canceler, 
   return canceler(collection);
 };
 
-exports._updateOne = function(selector, json, options, collection, canceler, callback, left, right) {
+export const _updateOne = function(selector, json, options, collection, canceler, callback, left, right) {
   collection.updateOne(selector, { $set: json }, options, function(err, x) {
     (err ? 
       callback(left(err)) : 
@@ -115,7 +115,7 @@ exports._updateOne = function(selector, json, options, collection, canceler, cal
   return canceler(collection);
 };
 
-exports._updateMany = function(selector, json, options, collection, canceler, callback, left, right) {
+export const _updateMany = function(selector, json, options, collection, canceler, callback, left, right) {
   collection.updateMany(selector, { $set: json }, options, function(err, x) {
     (err ? 
       callback(left(err)) : 
@@ -126,7 +126,7 @@ exports._updateMany = function(selector, json, options, collection, canceler, ca
   return canceler(collection);
 };
 
-exports._countDocuments = function(selector, options, collection, canceler, callback, left, right) {
+export const _countDocuments = function(selector, options, collection, canceler, callback, left, right) {
   collection["countDocuments"](selector, options, function(err, x) {
     (err ? callback(left(err)) : callback(right(x.result)))();
   });
@@ -134,7 +134,7 @@ exports._countDocuments = function(selector, options, collection, canceler, call
   return canceler(collection);
 };
 
-exports._aggregate = function(pipeline, options, collection, canceler, callback, left, right) {
+export const _aggregate = function(pipeline, options, collection, canceler, callback, left, right) {
   collection["aggregate"](pipeline, options, function(err, x) {
     (err ? callback(left(err)) : callback(right(x)))();
   });
