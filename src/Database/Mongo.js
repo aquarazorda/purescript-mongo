@@ -1,7 +1,9 @@
 'use strict';
 
+import { MongoClient } from 'mongodb';
+
 export const _connect = function _connect(uri, canceler, callback, left, right) {
-  var client = require('mongodb').MongoClient;
+  var client = MongoClient;
   client.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }, function(err, x) {
     
     if (err) {
@@ -30,7 +32,7 @@ export const _handleParseFailure = function _handleParseFailure(err, canceler, e
   process.nextTick(function() {
     errback(err)();
   });
-  var client = require('mongodb').MongoClient;
+  var client = MongoClient;
   return canceler(client);
 };
 

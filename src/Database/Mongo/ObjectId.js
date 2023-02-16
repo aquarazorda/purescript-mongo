@@ -1,6 +1,6 @@
 'use strict';
 
-const { ObjectId } = require("bson");
+import { ObjectId } from "bson";
 
 export const _show = function (oid) {
   return oid;
