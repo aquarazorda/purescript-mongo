@@ -9,6 +9,7 @@ module Database.Mongo
   , close
   , collection
   , insertOne
+  , insertMany
   , updateOne
   , find
   , findOne
@@ -25,9 +26,10 @@ module Database.Mongo
 import Prelude
 
 import Control.Bind (bindFlipped)
+import Control.Promise (Promise, toAffE)
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
-import Data.Function.Uncurried (Fn1, Fn2, Fn3, Fn5, Fn6, Fn7, Fn8, runFn1, runFn2, runFn5, runFn6, runFn7, runFn8)
+import Data.Function.Uncurried (Fn1, Fn2, Fn3, Fn5, Fn7, Fn8, runFn1, runFn2, runFn5, runFn7, runFn8)
 import Data.Maybe (Maybe)
 import Data.Nullable (null)
 import Database.Mongo.ObjectId (ObjectId)
@@ -35,9 +37,10 @@ import Database.Mongo.Options (defaultInsertOptions, defaultUpdateOptions, Inser
 import Database.Mongo.Query (Query)
 import Database.Mongo.Types (AggregationOptions, CountOptions, InsertOneResult, InsertManyResult, UpdateResult, FindOptions)
 import Effect (Effect)
-import Effect.Aff (Canceler, error, makeAff, nonCanceler)
+import Effect.Aff (Aff, Canceler, error, makeAff, nonCanceler)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Exception (Error)
+import Effect.Uncurried (EffectFn3, EffectFn4, EffectFn5, runEffectFn3, runEffectFn4, runEffectFn5)
 import Foreign (Foreign)
 import Simple.JSON (class ReadForeign, class WriteForeign, read, write)
 
@@ -48,9 +51,8 @@ foreign import data Cursor :: Type
 
 -- | Connect to MongoDB using a url as documented at
 -- | docs.mongodb.org/manual/reference/connection-string/
-connect :: ∀ m . MonadAff m => String -> m Client
-connect str = liftAff $ makeAff \cb ->
-  runFn5 _connect str noopCancel cb Left Right
+connect :: String -> Aff (Either Error Client)
+connect str = toAffE $ runEffectFn3 _connect str Left Right
 
 -- | Get the default database
 defaultDb :: Client -> Database
@@ -66,9 +68,8 @@ close cli = liftAff $ makeAff \cb ->
   runFn5 _close cli noopCancel cb Left Right
 
 -- | Fetch a specific collection by name
-collection :: ∀ a m. MonadAff m => String -> Database -> m (Collection a)
-collection name d = liftAff $ makeAff \cb ->
-  runFn6 _collection name d noopCancel cb Left Right 
+collection :: ∀ a. String -> Database -> Aff (Either Error (Collection a))
+collection name d = toAffE $ runEffectFn4 _collection name d Left Right
 
 -- | Fetches the an array of documents that match the query
 find :: ∀ a m. MonadAff m => ReadForeign a => Query a -> FindOptions -> Collection a -> m (Array a)
@@ -96,15 +97,14 @@ insertOne j o c = liftAff $ makeAff \cb ->
   runFn7 _insertOne (write j) (write o) c noopCancel cb Left Right
 
 -- | Inserts an array of documents into MongoDB
--- insertMany
---   :: ∀ a m
---    . WriteForeign a => MonadAff m
---   => Array a
---   -> InsertOptions
---   -> Collection a
---   -> m InsertManyResult
--- insertMany j o c = liftAff $ makeAff \cb ->
---   runFn7 _insertMany (write j) (write o) c noopCancel cb Left Right
+insertMany
+  :: ∀ a
+   . WriteForeign a
+  => Array a
+  -> InsertOptions
+  -> Collection a
+  -> Aff InsertManyResult
+insertMany j o c = toAffE $ runEffectFn5 _insertMany (write j) (write o) c Left Right
 
 -- | Update a single document in a collection
 updateOne
@@ -177,12 +177,10 @@ noopCancel :: forall a. a -> Canceler
 noopCancel _ = nonCanceler
 
 foreign import _connect ::
-  Fn5 String
-      (Client -> Canceler)
-      (Either Error Client -> Effect Unit)
+  EffectFn3 String
       (Error -> Either Error Client)
       (Client -> Either Error Client)
-      (Effect Canceler)
+      (Promise (Either Error Client))
 
 foreign import _defaultDb :: Fn1 Client Database
 foreign import _db :: Fn3 String Foreign Client Database
@@ -203,13 +201,11 @@ foreign import _close ::
       (Effect Canceler)
 
 foreign import _collection :: ∀ a.
-  Fn6 String
+  EffectFn4 String
       Database
-      (Database -> Canceler)
-      (Either Error (Collection a) -> Effect Unit)
       (Error -> Either Error (Collection a))
       (Collection a -> Either Error (Collection a))
-      (Effect Canceler)
+      (Promise (Either Error (Collection a)))
 
 foreign import _collect ::
   Fn5 Cursor
@@ -259,15 +255,13 @@ foreign import _insertOne :: ∀ a.
       (Effect Canceler)
 
 foreign import _insertMany :: ∀ a.
-  Fn7 
+  EffectFn5 
       Foreign
       Foreign
       (Collection a)
-      (Collection a -> Canceler)
-      (Either Error InsertManyResult -> Effect Unit)
       (Error -> Either Error Foreign)
       (Foreign -> Either Error Foreign)
-      (Effect Canceler)
+      (Promise InsertManyResult)
 
 foreign import _updateOne :: ∀ a.
   Fn8 
