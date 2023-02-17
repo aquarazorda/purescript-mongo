@@ -91,9 +91,8 @@ findOne q opts col = liftAff $ makeAff findOne'
 
 -- | Inserts a single document into MongoDB
 insertOne ::
-  ∀ a m.
+  ∀ a.
   WriteForeign a =>
-  MonadAff m =>
   a ->
   InsertOptions ->
   Collection a ->
