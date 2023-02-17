@@ -28,8 +28,7 @@ import Control.Bind (bindFlipped)
 import Control.Promise (Promise, toAffE)
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
-import Data.Function.Uncurried (Fn1, Fn2, Fn3, Fn5, Fn7, Fn8, runFn1, runFn2, runFn5, runFn7, runFn8)
-import Data.Maybe (Maybe)
+import Data.Function.Uncurried (Fn1, Fn2, Fn3, Fn5, Fn7, runFn1, runFn2, runFn5, runFn7)
 import Data.Nullable (null)
 import Database.Mongo.ObjectId (ObjectId)
 import Database.Mongo.Options (defaultInsertOptions, defaultUpdateOptions, InsertOptions, UpdateOptions)
@@ -39,7 +38,7 @@ import Effect (Effect)
 import Effect.Aff (Aff, Canceler, error, makeAff, nonCanceler)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Exception (Error)
-import Effect.Uncurried (EffectFn3, EffectFn4, EffectFn5, runEffectFn3, runEffectFn4, runEffectFn5)
+import Effect.Uncurried (EffectFn3, EffectFn4, EffectFn5, EffectFn6, runEffectFn3, runEffectFn4, runEffectFn5, runEffectFn6)
 import Foreign (Foreign)
 import Simple.JSON (class ReadForeign, class WriteForeign, read, write)
 
@@ -76,18 +75,12 @@ collection :: ∀ a. String -> Database -> Aff (Either Error (Collection a))
 collection name d = toAffE $ runEffectFn4 _collection name d Left Right
 
 -- | Fetches the an array of documents that match the query
-find :: ∀ a m. MonadAff m => ReadForeign a => Query a -> FindOptions -> Collection a -> m (Array a)
-find q opts col = liftAff $ makeAff find' >>= collect
-  where
-  find' cb = runFn7 _find (write q) opts col noopCancel cb Left Right
+find :: ∀ a. ReadForeign a => Query a -> FindOptions -> Collection a -> Aff (Either Error (Array a))
+find q opts col = toAffE $ runEffectFn5 _find (write q) opts col Left Right
 
 -- | Fetches the first document that matches the query
-findOne :: ∀ a m. MonadAff m => ReadForeign a => Query a -> FindOptions -> Collection a -> m (Maybe a)
-findOne q opts col = liftAff $ makeAff findOne'
-  where
-  findOne' cb = runFn7 _findOne (write q) opts col noopCancel (cb <<< bindFlipped parse) Left Right
-
-  parse = lmap (error <<< show) <<< read
+findOne :: ∀ a. ReadForeign a => Query a -> FindOptions -> Collection a -> Aff (Either Error a)
+findOne q opts col = toAffE $ runEffectFn5 _findOne (write q) opts col Left Right
 
 -- | Inserts a single document into MongoDB
 insertOne ::
@@ -111,18 +104,14 @@ insertMany j o c = toAffE $ runEffectFn5 _insertMany (write j) (write o) c Left 
 
 -- | Update a single document in a collection
 updateOne ::
-  ∀ a m.
+  ∀ a.
   WriteForeign a =>
-  MonadAff m =>
   Query a ->
   a ->
   UpdateOptions ->
   Collection a ->
-  m UpdateResult
-updateOne q u o c =
-  liftAff
-    $ makeAff \cb ->
-        runFn8 _updateOne (write q) (write u) (write o) c noopCancel cb Left Right
+  Aff (Either Error UpdateResult)
+updateOne q u o c = toAffE $ runEffectFn6 _updateOne (write q) (write u) (write o) c Left Right
 
 -- | Update a single document in a collection
 -- updateMany
@@ -236,25 +225,21 @@ foreign import _collectOne ::
 
 foreign import _findOne ::
   ∀ a.
-  Fn7 Foreign
+  EffectFn5 Foreign
     FindOptions
     (Collection a)
-    (Collection a -> Canceler)
-    (Either Error Foreign -> Effect Unit)
     (Error -> Either Error Foreign)
     (Foreign -> Either Error Foreign)
-    (Effect Canceler)
+    (Promise (Either Error a))
 
 foreign import _find ::
   ∀ a.
-  Fn7 Foreign
+  EffectFn5 Foreign
     FindOptions
     (Collection a)
-    (Collection a -> Canceler)
-    (Either Error Cursor -> Effect Unit)
     (Error -> Either Error Cursor)
     (Cursor -> Either Error Cursor)
-    (Effect Canceler)
+    (Promise (Either Error (Array a)))
 
 foreign import _insertOne ::
   ∀ a.
@@ -278,29 +263,25 @@ foreign import _insertMany ::
 
 foreign import _updateOne ::
   ∀ a.
-  Fn8
+  EffectFn6
     Foreign
     Foreign
     Foreign
     (Collection a)
-    (Collection a -> Canceler)
-    (Either Error UpdateResult -> Effect Unit)
     (Error -> Either Error Foreign)
     (Foreign -> Either Error Foreign)
-    (Effect Canceler)
+    (Promise (Either Error UpdateResult))
 
 foreign import _updateMany ::
   ∀ a.
-  Fn8
+  EffectFn6
     Foreign
     Foreign
     Foreign
     (Collection a)
-    (Collection a -> Canceler)
-    (Either Error UpdateResult -> Effect Unit)
     (Error -> Either Error Foreign)
     (Foreign -> Either Error Foreign)
-    (Effect Canceler)
+    (Promise (Either Error a))
 
 foreign import _countDocuments ::
   ∀ a.

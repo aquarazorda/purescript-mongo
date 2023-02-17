@@ -70,21 +70,25 @@ export const _collectOne = function _collectOne(cursor, canceler, callback, left
   return canceler(cursor);
 };
 
-export const _findOne = function _findOne(selector, fields, collection, canceler, callback, left, right) {
-  collection.findOne(selector, fields, function (err, x) {
-    (err ? callback(left(err)) : callback(right(x)))();
-  });
-  return canceler(collection);
+export const _findOne = async (selector, fields, collection, left, right) => {
+  try {
+    const res = collection.findOne(selector, fields);
+    return !!res ? right(res) : left(new Error('Not Found.'));
+  } catch (err) {
+    return left(err);
+  }
 };
 
-export const _find = function _find(selector, fields, collection, canceler, callback, left, right) {
-  collection.find(selector, fields, function (err, x) {
-    (err ? callback(left(err)) : callback(right(x)))();
-  });
-  return canceler(collection);
+export const _find = async (selector, fields, collection, left, right) => {
+  try {
+    const res = await collection.find(selector, fields);
+    return !res?.length ? right(res) : left(new Error('Not Found.'));
+  } catch (err) {
+    return left(err);
+  }
 };
 
-export const _insertOne = (json, options, collection, left, right) => {
+export const _insertOne = async (json, options, collection, left, right) => {
   try {
     const res = collection.insertOne(json, options);
     return right({ success: res.result.ok === 1, insertedId: res.insertedId });
@@ -102,26 +106,22 @@ export const _insertMany = async (json, options, collection, left, right) => {
   }
 };
 
-export const _updateOne = function (selector, json, options, collection, canceler, callback, left, right) {
-  collection.updateOne(selector, { $set: json }, options, function (err, x) {
-    (err ?
-      callback(left(err)) :
-      callback(right({ success: x.result.ok === 1 }))
-    )();
-  });
-
-  return canceler(collection);
+export const _updateOne = async (selector, json, options, collection, left, right) => {
+  try {
+    const res = collection.updateOne(selector, { $set: json }, options);
+    return right({ success: res.result.ok === 1 });
+  } catch (err) {
+    return left(err);
+  }
 };
 
-export const _updateMany = function (selector, json, options, collection, canceler, callback, left, right) {
-  collection.updateMany(selector, { $set: json }, options, function (err, x) {
-    (err ?
-      callback(left(err)) :
-      callback(right({ success: x.result.ok === 1 }))
-    )();
-  });
-
-  return canceler(collection);
+export const _updateMany = async (selector, json, options, collection, left, right) => {
+  try {
+    const res = collection.updateMany(selector, { $set: json }, options);
+    return right({ success: res.result.ok === 1 });
+  } catch (err) {
+    return left(err);
+  }
 };
 
 export const _countDocuments = function (selector, options, collection, canceler, callback, left, right) {
