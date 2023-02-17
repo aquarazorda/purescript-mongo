@@ -1,6 +1,22 @@
 { sources = [ "src/**/*.purs", "test/**/*.purs" ]
 , name = "mongo"
 , dependencies =
-  [ "effect", "aff", "simple-json", "node-process", "bifunctors", "either", "exceptions", "foreign", "functions", "maybe", "nullable", "prelude", "record", "typelevel-prelude", "unsafe-coerce" ]
+  [ "aff"
+  , "aff-promise"
+  , "bifunctors"
+  , "effect"
+  , "either"
+  , "exceptions"
+  , "foreign"
+  , "functions"
+  , "maybe"
+  , "node-process"
+  , "nullable"
+  , "prelude"
+  , "record"
+  , "simple-json"
+  , "typelevel-prelude"
+  , "unsafe-coerce"
+  ]
 , packages = ./packages.dhall
 }
