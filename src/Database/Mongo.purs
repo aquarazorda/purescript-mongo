@@ -11,6 +11,7 @@ module Database.Mongo
   , insertOne
   , insertMany
   , updateOne
+  , updateOne'
   , find
   , findOne
   , countDocuments
@@ -31,6 +32,7 @@ import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn1, Fn2, Fn3, Fn5, Fn7, runFn1, runFn2, runFn5, runFn7)
 import Data.Nullable (null)
 import Database.Mongo.ObjectId (ObjectId)
+import Database.Mongo.Operators (Operator, set)
 import Database.Mongo.Options (defaultInsertOptions, defaultUpdateOptions, InsertOptions, UpdateOptions)
 import Database.Mongo.Query (Query)
 import Database.Mongo.Types (AggregationOptions, CountOptions, InsertOneResult, InsertManyResult, UpdateResult, FindOptions)
@@ -103,7 +105,20 @@ insertMany ::
 insertMany j o c = toAffE $ runEffectFn5 _insertMany (write j) (write o) c Left Right
 
 -- | Update a single document in a collection
+-- | by passing Operators to the update
 updateOne ::
+  ∀ a.
+  WriteForeign a =>
+  Query a ->
+  Array Operator ->
+  UpdateOptions ->
+  Collection a ->
+  Aff (Either Error UpdateResult)
+updateOne q op o c = toAffE $ runEffectFn6 _updateOne (write q) (write op) (write o) c Left Right
+
+-- | Update a single document in a collection
+-- | by passing a document to the update as second argument
+updateOne' ::
   ∀ a.
   WriteForeign a =>
   Query a ->
@@ -111,7 +126,7 @@ updateOne ::
   UpdateOptions ->
   Collection a ->
   Aff (Either Error UpdateResult)
-updateOne q u o c = toAffE $ runEffectFn6 _updateOne (write q) (write u) (write o) c Left Right
+updateOne' q u o c = updateOne q [ set u ] o c
 
 -- | Update a single document in a collection
 -- updateMany

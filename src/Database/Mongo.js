@@ -106,9 +106,10 @@ export const _insertMany = async (json, options, collection, left, right) => {
   }
 };
 
-export const _updateOne = async (selector, json, options, collection, left, right) => {
+export const _updateOne = async (selector, json, operators, options, collection, left, right) => {
   try {
-    const res = collection.updateOne(selector, { $set: json }, options);
+    const ops = Object.assign({}, ...operators);
+    const res = collection.updateOne(selector, ops, options);
     return right({ success: res.result.ok === 1 });
   } catch (err) {
     return left(err);
