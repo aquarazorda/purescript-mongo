@@ -12,6 +12,8 @@ module Database.Mongo
   , insertMany
   , updateOne
   , updateOne'
+  , updateMany
+  , updateMany'
   , find
   , findOne
   , countDocuments
@@ -129,16 +131,26 @@ updateOne' ::
 updateOne' q u o c = updateOne q [ set u ] o c
 
 -- | Update a single document in a collection
--- updateMany
---   :: ∀ a m
---    . WriteForeign a => MonadAff m
---   => Query a
---   -> a
---   -> UpdateOptions
---   -> Collection a
---   -> m UpdateResult
--- updateMany q u o c = liftAff $ makeAff \cb ->
---   runFn8 _updateMany (write q) (write u) (write o) c noopCancel cb Left Right
+updateMany ::
+  ∀ a.
+  WriteForeign a =>
+  Query a ->
+  Array Operator ->
+  UpdateOptions ->
+  Collection a ->
+  Aff (Either Error a)
+updateMany q u o c = toAffE $ runEffectFn6 _updateMany (write q) (write u) (write o) c Left Right
+
+updateMany' ::
+  ∀ a.
+  WriteForeign a =>
+  Query a ->
+  a ->
+  UpdateOptions ->
+  Collection a ->
+  Aff (Either Error a)
+updateMany' q u o c = updateMany q [ set u ] o c
+
 -- | Gets the number of documents matching the filter
 countDocuments :: ∀ a m. MonadAff m => Query a -> CountOptions -> Collection a -> m Int
 countDocuments q o col =

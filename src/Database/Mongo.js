@@ -116,9 +116,10 @@ export const _updateOne = async (selector, operators, options, collection, left,
   }
 };
 
-export const _updateMany = async (selector, json, options, collection, left, right) => {
+export const _updateMany = async (selector, operators, options, collection, left, right) => {
   try {
-    const res = await collection.updateMany(selector, { $set: json }, options);
+    const ops = Object.assign({}, ...operators);
+    const res = await collection.updateMany(selector, ops, options);
     return res ? right(res) : left({ success: false });
   } catch (err) {
     return left(err);
