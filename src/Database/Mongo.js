@@ -72,8 +72,8 @@ export const _collectOne = function _collectOne(cursor, canceler, callback, left
 
 export const _findOne = async (selector, fields, collection, left, right) => {
   try {
-    const res = collection.findOne(selector, fields);
-    return !!res ? right(res) : left(new Error('Not Found.'));
+    const res = await collection.findOne(selector, fields);
+    return res ? right(res) : left({ success: false });
   } catch (err) {
     return left(err);
   }
@@ -82,7 +82,7 @@ export const _findOne = async (selector, fields, collection, left, right) => {
 export const _find = async (selector, fields, collection, left, right) => {
   try {
     const res = await collection.find(selector, fields);
-    return !res?.length ? right(res) : left(new Error('Not Found.'));
+    return res ? right(res) : left({ success: false });
   } catch (err) {
     return left(err);
   }
@@ -90,10 +90,8 @@ export const _find = async (selector, fields, collection, left, right) => {
 
 export const _insertOne = async (json, options, collection, left, right) => {
   try {
-    const { result } = collection.insertOne(json, options);
-    return result 
-      ? right({ success: result.ok === 1, insertedId: result.insertedId }) 
-      : left({ success: false, insertedId: null });
+    const res = await collection.insertOne(json, options);
+    return res ? right(res) : left({ success: false });
   } catch (err) {
     return left(err);
   }
@@ -101,10 +99,8 @@ export const _insertOne = async (json, options, collection, left, right) => {
 
 export const _insertMany = async (json, options, collection, left, right) => {
   try {
-    const { result } = await collection.insertMany(json, options);
-    return result 
-      ? right({ success: result.ok === 1, insertedCount: result.insertedCount }) 
-      : left({ success: false, insertedCount: 0  });
+    const { res } = await collection.insertMany(json, options);
+    return res ? right(res) : left({ success: false });
   } catch (err) {
     return left(err);
   }
@@ -113,8 +109,8 @@ export const _insertMany = async (json, options, collection, left, right) => {
 export const _updateOne = async (selector, operators, options, collection, left, right) => {
   try {
     const ops = Object.assign({}, ...operators);
-    const { result } = collection.updateOne(selector, ops, options);
-    return result ? right({ success: result.ok === 1 }) : left({ success: false });
+    const res = await collection.updateOne(selector, ops, options);
+    return res ? right(res) : left({ success: false });
   } catch (err) {
     return left(err);
   }
@@ -122,8 +118,8 @@ export const _updateOne = async (selector, operators, options, collection, left,
 
 export const _updateMany = async (selector, json, options, collection, left, right) => {
   try {
-    const res = collection.updateMany(selector, { $set: json }, options);
-    return right({ success: res.result.ok === 1 });
+    const res = await collection.updateMany(selector, { $set: json }, options);
+    return res ? right(res) : left({ success: false });
   } catch (err) {
     return left(err);
   }
