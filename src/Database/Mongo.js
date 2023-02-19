@@ -90,8 +90,10 @@ export const _find = async (selector, fields, collection, left, right) => {
 
 export const _insertOne = async (json, options, collection, left, right) => {
   try {
-    const res = collection.insertOne(json, options);
-    return right({ success: res.result.ok === 1, insertedId: res.insertedId });
+    const { result } = collection.insertOne(json, options);
+    return result 
+      ? right({ success: result.ok === 1, insertedId: result.insertedId }) 
+      : left({ success: false, insertedId: null });
   } catch (err) {
     return left(err);
   }
@@ -100,7 +102,9 @@ export const _insertOne = async (json, options, collection, left, right) => {
 export const _insertMany = async (json, options, collection, left, right) => {
   try {
     const { result } = await collection.insertMany(json, options);
-    return right({ success: result.ok === 1, insertedCount: result.insertedCount });
+    return result 
+      ? right({ success: result.ok === 1, insertedCount: result.insertedCount }) 
+      : left({ success: false, insertedCount: 0  });
   } catch (err) {
     return left(err);
   }
@@ -109,8 +113,8 @@ export const _insertMany = async (json, options, collection, left, right) => {
 export const _updateOne = async (selector, operators, options, collection, left, right) => {
   try {
     const ops = Object.assign({}, ...operators);
-    const res = collection.updateOne(selector, ops, options);
-    return right({ success: res.result.ok === 1 });
+    const { result } = collection.updateOne(selector, ops, options);
+    return result ? right({ success: result.ok === 1 }) : left({ success: false });
   } catch (err) {
     return left(err);
   }
