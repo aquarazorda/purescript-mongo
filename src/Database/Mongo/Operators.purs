@@ -12,5 +12,11 @@ instance writeOperator :: WriteForeign Operator where
 set :: ∀ a. WriteForeign a => a -> Operator
 set v = unsafeCoerce $ write { "$set": v }
 
+unset :: ∀ a. WriteForeign a => a -> Operator
+unset v = unsafeCoerce $ write { "$unset": v }
+
 setOnInsert :: ∀ a. WriteForeign a => a -> Operator
 setOnInsert v = unsafeCoerce $ write { "$setOnInsert": v }
+
+currentDate :: ∀ a. WriteForeign a => a -> Operator
+currentDate v = unsafeCoerce $ write { "$currentDate": v }
