@@ -43,7 +43,7 @@ let additions =
           , "simple-json"
           ]
       , repo =
-          "https://github.com/j-nava/purescript-mongo"
+          "https://github.com/aquarazorda/purescript-mongo"
       , version =
           "master"
       }
